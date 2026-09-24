@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fee Dashboard</title>
+<link rel="icon" type="image/png" href="https://okiedokie-erp-images.s3.ap-south-1.amazonaws.com/DVMD/2026/09/sourceURL/05a0257114ae77ea92d1-unnamed.png" />
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --panel: #ffffff;
+    --panel-border: rgba(0, 0, 0, 0.06);
+    --text: #1d1d1f;
+    --muted: #86868b;
+    --accent: #0071e3;
+    --received: #34c759;
+    --due: #ff3b30;
+    --amber: #ff9f0a;
+    --track: #e8e8ed;
+    --pink: #ff2d55;
+    --purple: #af52de;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.04);
+    --shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.05), 0 16px 32px rgba(0, 0, 0, 0.07);
+    --radius-lg: 20px;
+    --radius-md: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --panel: #1c1c1e;
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --text: #f5f5f7;
+      --muted: #98989d;
+      --accent: #0a84ff;
+      --received: #30d158;
+      --due: #ff453a;
+      --amber: #ff9f0a;
+      --track: #2c2c2e;
+      --pink: #ff375f;
+      --purple: #bf5af2;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+      --shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.35), 0 16px 32px rgba(0, 0, 0, 0.4);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 16px 0;
+    margin-bottom: 28px;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: 10px;
+  }
+  h1 {
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 400;
+    margin-top: 1px;
+  }
+  .controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  select, input {
+    -webkit-appearance: none;
+    appearance: none;
+    padding: 9px 16px;
+    border-radius: 980px;
+    border: 1px solid var(--panel-border);
+    background: var(--panel);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s ease, transform 0.15s ease;
+  }
+  select { padding-right: 30px; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 16px) calc(50% - 2px), calc(100% - 11px) calc(50% - 2px); background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; cursor: pointer; }
+  input { width: 130px; }
+  select:hover, input:hover { box-shadow: var(--shadow-hover); }
+  select:focus, input:focus { outline: none; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); }
+
+  .status {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    margin: 0 0 16px;
+  }
+
+  .tabs {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    background: var(--track);
+    border-radius: 980px;
+    margin-bottom: 20px;
+  }
+  .tab {
+    -webkit-appearance: none;
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 18px;
+    border-radius: 980px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .tab.active {
+    background: var(--panel);
+    color: var(--text);
+    box-shadow: var(--shadow);
+  }
+
+  .entity-section {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 24px 24px 8px;
+    margin-bottom: 24px;
+    transition: box-shadow 0.25s ease;
+  }
+  .entity-section:hover { box-shadow: var(--shadow-hover); }
+  .entity-section.is-flat { padding-bottom: 24px; }
+  .entity-section.group-summary {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 8%, var(--panel)), var(--panel));
+    border-color: color-mix(in srgb, var(--accent) 25%, var(--panel-border));
+  }
+  .group-summary .section-head h2 { font-size: 19px; }
+
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .section-head h2 {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 11px;
+    border-radius: 980px;
+    white-space: nowrap;
+  }
+  .badge.good { color: var(--received); background: color-mix(in srgb, var(--received) 15%, transparent); }
+  .badge.mid { color: var(--amber); background: color-mix(in srgb, var(--amber) 15%, transparent); }
+  .badge.low { color: var(--due); background: color-mix(in srgb, var(--due) 15%, transparent); }
+
+  .empty {
+    color: var(--muted);
+    font-size: 13px;
+    padding-bottom: 20px;
+  }
+  .empty.error { color: var(--due); }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .card {
+    background: color-mix(in srgb, var(--text) 3%, var(--panel));
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+  }
+  .card .dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+  .card--estimated .dot { background: var(--muted); }
+  .card--received .dot { background: var(--received); }
+  .card--due .dot { background: var(--due); }
+  .card--collected .dot { display: none; }
+  .card--total .dot { background: var(--accent); }
+  .card--boys .dot { background: var(--purple); }
+  .card--girls .dot { background: var(--pink); }
+  .card--new .dot { background: var(--received); }
+  .card .label {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .card .value {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin-top: 5px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .subhead {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 20px 0 8px;
+  }
+  .subhead:first-of-type { margin-top: 0; }
+
+  .chart-wrap { margin-bottom: 20px; }
+  .chart-legend {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 10px;
+  }
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .legend-swatch {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    display: inline-block;
+  }
+  .chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .grid-line { stroke: var(--panel-border); stroke-width: 1; }
+  .axis-label { fill: var(--muted); font-size: 10px; font-weight: 500; }
+  .x-label { fill: var(--muted); font-size: 10px; font-weight: 600; }
+  .bar-group { cursor: pointer; }
+  .bar-seg { transition: opacity 0.15s ease; }
+  .bar-group:hover .bar-seg { opacity: 0.75; }
+  .bar-seg-received { fill: var(--received); }
+  .bar-seg-due { fill: var(--due); }
+
+  .chart-tooltip {
+    position: fixed;
+    z-index: 100;
+    pointer-events: none;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    box-shadow: var(--shadow-hover);
+    padding: 10px 12px;
+    font-size: 12px;
+    min-width: 150px;
+    opacity: 0;
+    transform: translate(-50%, calc(-100% - 12px));
+    transition: opacity 0.1s ease;
+  }
+  .chart-tooltip.visible { opacity: 1; }
+  .chart-tooltip .tt-title { font-weight: 700; margin-bottom: 6px; color: var(--text); }
+  .chart-tooltip .tt-row { display: flex; align-items: center; gap: 6px; justify-content: space-between; padding: 2px 0; }
+  .chart-tooltip .tt-key { display: flex; align-items: center; gap: 6px; color: var(--muted); font-weight: 500; }
+  .chart-tooltip .tt-stroke { width: 10px; height: 2px; border-radius: 1px; display: inline-block; }
+  .chart-tooltip .tt-val { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td {
+    text-align: right;
+    padding: 11px 4px;
+    border-top: 1px solid var(--panel-border);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  th:first-child, td:first-child { text-align: left; }
+  th {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-top: none;
+    padding-bottom: 8px;
+  }
+  tbody tr { transition: background 0.15s ease; }
+  tbody tr:hover { background: color-mix(in srgb, var(--accent) 4%, transparent); }
+  td:first-child { font-weight: 500; }
+  .pct-cell { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+  .pct-num { width: 42px; text-align: right; font-weight: 600; }
+  .bar-wrap {
+    width: 64px;
+    background: var(--track);
+    border-radius: 980px;
+    height: 6px;
+    overflow: hidden;
+  }
+  .bar-fill { height: 100%; border-radius: 980px; }
+
+  @media (max-width: 640px) {
+    .cards { grid-template-columns: repeat(2, 1fr); }
+    .topbar { flex-direction: column; align-items: flex-start; }
+    table, thead, tbody, th, td, tr { display: block; }
+    thead { display: none; }
+    td { display: flex; justify-content: space-between; text-align: right; border-top: none; padding: 4px 0; }
+    td:first-child { font-weight: 600; padding-top: 12px; }
+    tr { padding-bottom: 6px; border-bottom: 1px solid var(--panel-border); }
+    tr:last-child { border-bottom: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="brand">
+        <img class="logo" src="https://okiedokie-erp-images.s3.ap-south-1.amazonaws.com/PMV/2026/07/logo/cd3d93b54cd4627514bc-PMVOD.png" alt="Puran Murti logo" />
+        <div>
+          <h1>Fee Dashboard</h1>
+          <div class="subtitle">Live data from ERP</div>
+        </div>
+      </div>
+      <div class="controls">
+        <select id="entitySelect"></select>
+        <input id="sessionInput" type="text" value="2026-27" placeholder="Session" />
+      </div>
+    </div>
+
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-tab="fee">Fee Data</button>
+      <button class="tab" data-tab="strength">Student Strength</button>
+      <button class="tab" data-tab="admission">Admission</button>
+    </div>
+
+    <div id="status" class="status"></div>
+    <div id="sections"></div>
+  </div>
+
+  <div id="chartTooltip" class="chart-tooltip"></div>
+
+<script>
+  const entitySelect = document.getElementById('entitySelect');
+  const sessionInput = document.getElementById('sessionInput');
+  const statusEl = document.getElementById('status');
+  const sectionsEl = document.getElementById('sections');
+  const tabsEl = document.getElementById('tabs');
+
+  let allEntities = [];
+  let activeTab = 'fee';
+
+  function formatCurrency(n) {
+    return '₹' + Math.round(Number(n)).toLocaleString('en-IN');
+  }
+
+  function pctColor(p) {
+    if (p >= 75) return 'var(--received)';
+    if (p >= 40) return 'var(--amber)';
+    return 'var(--due)';
+  }
+
+  function badgeClass(p) {
+    if (p >= 75) return 'good';
+    if (p >= 40) return 'mid';
+    return 'low';
+  }
+
+  async function loadEntities() {
+    const res = await fetch('/api/entities');
+    allEntities = await res.json();
+    entitySelect.innerHTML =
+      `<option value="">All Entities</option>` +
+      allEntities.map((e) => `<option value="${e.id}">${e.name}</option>`).join('');
+    if (allEntities.length) loadData();
+  }
+
+  async function loadData() {
+    const entity = entitySelect.value;
+    const session = sessionInput.value.trim();
+    if (!session) return;
+
+    const targets = entity ? allEntities.filter((e) => e.id === entity) : allEntities;
+
+    statusEl.textContent = 'Loading…';
+    sectionsEl.innerHTML = '';
+
+    if (activeTab === 'admission') {
+      const results = await Promise.all(
+        targets.map(async (e) => {
+          try {
+            const res = await fetch(`/api/admission?entity=${encodeURIComponent(e.id)}&session=${encodeURIComponent(session)}`);
+            const data = await res.json();
+            if (!res.ok) return { entity: e, error: data.error || 'Failed to load' };
+            return { entity: e, data };
+          } catch (err) {
+            return { entity: e, error: 'Network error: ' + err.message };
+          }
+        })
+      );
+      statusEl.textContent = `Session ${session} · ${targets.length} ${targets.length === 1 ? 'entity' : 'entities'}`;
+      const sorted = sortByHasData(results, admissionHasData);
+      sectionsEl.innerHTML = sorted.map(renderAdmissionSection).join('');
+      return;
+    }
+
+    if (activeTab === 'strength') {
+      const results = await Promise.all(
+        targets.map(async (e) => {
+          try {
+            const res = await fetch(`/api/student-strength?entity=${encodeURIComponent(e.id)}&session=${encodeURIComponent(session)}`);
+            const data = await res.json();
+            if (!res.ok) return { entity: e, error: data.error || 'Failed to load' };
+            return { entity: e, headCount: data.headCount, groupByCourse: data.groupByCourse };
+          } catch (err) {
+            return { entity: e, error: 'Network error: ' + err.message };
+          }
+        })
+      );
+      statusEl.textContent = `Session ${session} · ${targets.length} ${targets.length === 1 ? 'entity' : 'entities'}`;
+      const sorted = sortByHasData(results, strengthHasData);
+      sectionsEl.innerHTML = sorted.map(renderStrengthSection).join('');
+      return;
+    }
+
+    const results = await Promise.all(
+      targets.map(async (e) => {
+        try {
+          const res = await fetch(`/api/fee-data?entity=${encodeURIComponent(e.id)}&session=${encodeURIComponent(session)}`);
+          const data = await res.json();
+          if (!res.ok) return { entity: e, error: data.error || 'Failed to load' };
+          return { entity: e, installments: data.installments };
+        } catch (err) {
+          return { entity: e, error: 'Network error: ' + err.message };
+        }
+      })
+    );
+
+    statusEl.textContent = `Session ${session} · ${targets.length} ${targets.length === 1 ? 'entity' : 'entities'}`;
+    const groupHtml = entity ? '' : renderGroupSummary(results);
+    const sorted = sortByHasData(results, feeHasData);
+    sectionsEl.innerHTML = groupHtml + sorted.map(renderSection).join('');
+  }
+
+  function sortByHasData(results, hasDataFn) {
+    return results
+      .map((r, idx) => ({ r, idx, has: hasDataFn(r) }))
+      .sort((a, b) => (a.has === b.has ? a.idx - b.idx : a.has ? -1 : 1))
+      .map((x) => x.r);
+  }
+
+  function feeHasData(r) {
+    if (r.error || !r.installments) return false;
+    return r.installments.some((i) => i.estimatedAmount > 0);
+  }
+
+  function strengthHasData(r) {
+    if (r.error) return false;
+    return (r.headCount?.totalStudents || 0) > 0;
+  }
+
+  function admissionHasData(r) {
+    if (r.error) return false;
+    const d = r.data || {};
+    return Object.values(d).some((v) => Array.isArray(v) && v.length > 0);
+  }
+
+  function renderGroupSummary(results) {
+    const totals = results.reduce(
+      (acc, r) => {
+        if (r.error || !r.installments) return acc;
+        r.installments.forEach((i) => {
+          acc.estimatedAmount += i.estimatedAmount;
+          acc.receivedAmount += i.receivedAmount;
+          acc.dueAmount += i.dueAmount;
+        });
+        return acc;
+      },
+      { estimatedAmount: 0, receivedAmount: 0, dueAmount: 0 }
+    );
+    const pct = totals.estimatedAmount ? (totals.receivedAmount / totals.estimatedAmount) * 100 : 0;
+
+    return `
+      <div class="entity-section group-summary">
+        <div class="section-head">
+          <h2>Puran Murti Group</h2>
+          <span class="badge ${badgeClass(pct)}">${pct.toFixed(1)}% collected</span>
+        </div>
+        <div class="cards">
+          <div class="card card--estimated"><div class="label"><span class="dot"></span>Estimated</div><div class="value">${formatCurrency(totals.estimatedAmount)}</div></div>
+          <div class="card card--received"><div class="label"><span class="dot"></span>Received</div><div class="value">${formatCurrency(totals.receivedAmount)}</div></div>
+          <div class="card card--due"><div class="label"><span class="dot"></span>Due</div><div class="value">${formatCurrency(totals.dueAmount)}</div></div>
+          <div class="card card--collected"><div class="label">Collected</div><div class="value">${pct.toFixed(1)}%</div></div>
+        </div>
+      </div>
+    `;
+  }
+
+  const MONTH_ORDER = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+  const QUARTER_ORDER = ['APR-JUN', 'JUL-SEP', 'OCT-DEC', 'JAN-MAR'];
+
+  function sortInstallments(installments) {
+    const known = [...MONTH_ORDER, ...QUARTER_ORDER];
+    return [...installments].sort((a, b) => {
+      const ai = known.indexOf(a.name);
+      const bi = known.indexOf(b.name);
+      if (ai === -1 && bi === -1) return 0;
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+  }
+
+  function renderSection({ entity, installments, error }) {
+    if (error) {
+      return `
+        <div class="entity-section is-flat">
+          <div class="section-head"><h2>${entity.name}</h2></div>
+          <div class="empty error">${error}</div>
+        </div>
+      `;
+    }
+
+    const sorted = sortInstallments(installments);
+
+    if (!sorted.length) {
+      return `
+        <div class="entity-section is-flat">
+          <div class="section-head"><h2>${entity.name}</h2></div>
+          <div class="empty">No fee data for this session.</div>
+        </div>
+      `;
+    }
+
+    const totals = sorted.reduce(
+      (acc, i) => ({
+        estimatedAmount: acc.estimatedAmount + i.estimatedAmount,
+        receivedAmount: acc.receivedAmount + i.receivedAmount,
+        dueAmount: acc.dueAmount + i.dueAmount,
+      }),
+      { estimatedAmount: 0, receivedAmount: 0, dueAmount: 0 }
+    );
+    const pct = totals.estimatedAmount ? (totals.receivedAmount / totals.estimatedAmount) * 100 : 0;
+
+    const rows = sorted
+      .map((i) => {
+        const p = i.estimatedAmount ? (i.receivedAmount / i.estimatedAmount) * 100 : 0;
+        return `
+          <tr>
+            <td>${i.name}</td>
+            <td>${formatCurrency(i.estimatedAmount)}</td>
+            <td>${formatCurrency(i.receivedAmount)}</td>
+            <td>${formatCurrency(i.dueAmount)}</td>
+            <td>
+              <div class="pct-cell">
+                <span class="pct-num">${p.toFixed(1)}%</span>
+                <div class="bar-wrap"><div class="bar-fill" style="width:${p}%;background:${pctColor(p)}"></div></div>
+              </div>
+            </td>
+          </tr>
+        `;
+      })
+      .join('');
+
+    return `
+      <div class="entity-section">
+        <div class="section-head">
+          <h2>${entity.name}</h2>
+          <span class="badge ${badgeClass(pct)}">${pct.toFixed(1)}% collected</span>
+        </div>
+        <div class="cards">
+          <div class="card card--estimated"><div class="label"><span class="dot"></span>Estimated</div><div class="value">${formatCurrency(totals.estimatedAmount)}</div></div>
+          <div class="card card--received"><div class="label"><span class="dot"></span>Received</div><div class="value">${formatCurrency(totals.receivedAmount)}</div></div>
+          <div class="card card--due"><div class="label"><span class="dot"></span>Due</div><div class="value">${formatCurrency(totals.dueAmount)}</div></div>
+          <div class="card card--collected"><div class="label">Collected</div><div class="value">${pct.toFixed(1)}%</div></div>
+        </div>
+        ${totals.estimatedAmount > 0 ? buildBarChart(sorted) : ''}
+        <table>
+          <thead>
+            <tr>
+              <th>Installment</th>
+              <th>Estimated</th>
+              <th>Received</th>
+              <th>Due</th>
+              <th>Collected</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function formatCompact(n) {
+    if (n >= 1e7) return '₹' + (n / 1e7).toFixed(1).replace(/\.0$/, '') + 'Cr';
+    if (n >= 1e5) return '₹' + (n / 1e5).toFixed(1).replace(/\.0$/, '') + 'L';
+    if (n >= 1e3) return '₹' + (n / 1e3).toFixed(0) + 'K';
+    return '₹' + n;
+  }
+
+  function niceCeil(n) {
+    if (n <= 0) return 1;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(n)));
+    const normalized = n / magnitude;
+    let step;
+    if (normalized <= 1) step = 1;
+    else if (normalized <= 2) step = 2;
+    else if (normalized <= 5) step = 5;
+    else step = 10;
+    return step * magnitude;
+  }
+
+  function roundedTopPath(x, y, w, h, r) {
+    if (h <= 0) return '';
+    r = Math.min(r, w / 2, h);
+    if (r <= 0) return `M${x},${y} h${w} v${h} h${-w} Z`;
+    return `M${x},${y + r} A${r},${r} 0 0 1 ${x + r},${y} L${x + w - r},${y} A${r},${r} 0 0 1 ${x + w},${y + r} L${x + w},${y + h} L${x},${y + h} Z`;
+  }
+
+  function buildBarChart(installments) {
+    const W = 720;
+    const H = 220;
+    const padLeft = 44;
+    const padRight = 8;
+    const padTop = 12;
+    const padBottom = 26;
+    const plotW = W - padLeft - padRight;
+    const plotH = H - padTop - padBottom;
+    const baseline = padTop + plotH;
+
+    const maxEstimated = Math.max(...installments.map((i) => i.estimatedAmount), 1);
+    const niceMax = niceCeil(maxEstimated);
+    const scale = plotH / niceMax;
+
+    const n = installments.length;
+    const band = plotW / n;
+    const barWidth = Math.min(24, band * 0.55);
+    const gap = 2;
+
+    const gridTicks = [0, 0.5, 1].map((f) => {
+      const y = baseline - plotH * f;
+      const val = niceMax * f;
+      return `
+        <line class="grid-line" x1="${padLeft}" y1="${y}" x2="${W - padRight}" y2="${y}" />
+        <text class="axis-label" x="${padLeft - 8}" y="${y + 3}" text-anchor="end">${formatCompact(val)}</text>
+      `;
+    }).join('');
+
+    const bars = installments
+      .map((inst, idx) => {
+        const x = padLeft + idx * band + (band - barWidth) / 2;
+        const receivedH = Math.max(inst.receivedAmount * scale, 0);
+        const dueH = Math.max(inst.dueAmount * scale, 0);
+
+        let segMarkup = '';
+        if (dueH > 0) {
+          const receivedY = baseline - receivedH;
+          const dueY = receivedY - gap - dueH;
+          if (receivedH > 0) {
+            segMarkup += `<rect class="bar-seg bar-seg-received" x="${x}" y="${receivedY}" width="${barWidth}" height="${receivedH}" />`;
+          }
+          segMarkup += `<path class="bar-seg bar-seg-due" d="${roundedTopPath(x, dueY, barWidth, dueH, 4)}" />`;
+        } else if (receivedH > 0) {
+          segMarkup += `<path class="bar-seg bar-seg-received" d="${roundedTopPath(x, baseline - receivedH, barWidth, receivedH, 4)}" />`;
+        }
+
+        const labelX = x + barWidth / 2;
+        return `
+          <g class="bar-group" data-name="${inst.name}" data-estimated="${inst.estimatedAmount}" data-received="${inst.receivedAmount}" data-due="${inst.dueAmount}">
+            <rect x="${padLeft + idx * band}" y="${padTop}" width="${band}" height="${plotH}" fill="transparent" />
+            ${segMarkup}
+            <text class="x-label" x="${labelX}" y="${H - 6}" text-anchor="middle">${inst.name}</text>
+          </g>
+        `;
+      })
+      .join('');
+
+    return `
+      <div class="chart-wrap">
+        <div class="chart-legend">
+          <span class="legend-item"><span class="legend-swatch" style="background:var(--received)"></span>Received</span>
+          <span class="legend-item"><span class="legend-swatch" style="background:var(--due)"></span>Due</span>
+        </div>
+        <svg class="chart-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Received vs due by installment">
+          ${gridTicks}
+          <line class="grid-line" x1="${padLeft}" y1="${baseline}" x2="${W - padRight}" y2="${baseline}" style="stroke:var(--muted)" />
+          ${bars}
+        </svg>
+      </div>
+    `;
+  }
+
+  function renderStrengthSection({ entity, headCount, groupByCourse, error }) {
+    if (error) {
+      return `
+        <div class="entity-section is-flat">
+          <div class="section-head"><h2>${entity.name}</h2></div>
+          <div class="empty error">${error}</div>
+        </div>
+      `;
+    }
+
+    const total = headCount?.totalStudents || 0;
+
+    if (!total) {
+      return `
+        <div class="entity-section is-flat">
+          <div class="section-head"><h2>${entity.name}</h2></div>
+          <div class="empty">No student data for this session.</div>
+        </div>
+      `;
+    }
+
+    const boys = headCount.boys || 0;
+    const girls = headCount.girls || 0;
+    const newAdmission = headCount.newAdmission || 0;
+
+    const courses = [...(groupByCourse || [])].sort((a, b) => b.total - a.total);
+    const maxCourseTotal = Math.max(...courses.map((c) => c.total), 1);
+
+    const rows = courses
+      .map((c) => {
+        const width = (c.total / maxCourseTotal) * 100;
+        return `
+          <tr>
+            <td>${c.course}</td>
+            <td>${c.total}</td>
+            <td>${c.newAdmission || 0}</td>
+            <td>
+              <div class="pct-cell">
+                <span class="pct-num">${c.total}</span>
+                <div class="bar-wrap"><div class="bar-fill" style="width:${width}%;background:var(--accent)"></div></div>
+              </div>
+            </td>
+          </tr>
+        `;
+      })
+      .join('');
+
+    return `
+      <div class="entity-section">
+        <div class="section-head">
+          <h2>${entity.name}</h2>
+          <span class="badge good">${total} students</span>
+        </div>
+        <div class="cards">
+          <div class="card card--total"><div class="label"><span class="dot"></span>Total Students</div><div class="value">${total}</div></div>
+          <div class="card card--boys"><div class="label"><span class="dot"></span>Boys</div><div class="value">${boys}</div></div>
+          <div class="card card--girls"><div class="label"><span class="dot"></span>Girls</div><div class="value">${girls}</div></div>
+          <div class="card card--new"><div class="label"><span class="dot"></span>New Admissions</div><div class="value">${newAdmission}</div></div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>Total</th>
+              <th>New Admissions</th>
+              <th>Strength</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  const ADMISSION_GROUPS = [
+    { key: 'stageWiseCount', title: 'By Stage' },
+    { key: 'enquiriesBySource', title: 'By Source' },
+    { key: 'enquiriesByCourse', title: 'By Course' },
+    { key: 'enquiriesByCourseAndStream', title: 'By Course & Stream' },
+    { key: 'tagWiseCount', title: 'By Tag' },
+    { key: 'admissionCounts', title: 'Admission Counts' },
+  ];
+
+  function renderGenericTable(rows) {
+    const cols = Object.keys(rows[0]);
+    const labelCol = cols.find((c) => typeof rows[0][c] !== 'number') || cols[0];
+    const valueCols = cols.filter((c) => c !== labelCol);
+    const header = `<th>${labelCol}</th>` + valueCols.map((c) => `<th>${c}</th>`).join('');
+    const body = rows
+      .map(
+        (r) =>
+          `<tr><td>${r[labelCol] ?? '—'}</td>${valueCols.map((c) => `<td>${r[c] ?? ''}</td>`).join('')}</tr>`
+      )
+      .join('');
+    return `<table><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table>`;
+  }
+
+  function renderAdmissionSection({ entity, data, error }) {
+    if (error) {
+      return `
+        <div class="entity-section is-flat">
+          <div class="section-head"><h2>${entity.name}</h2></div>
+          <div class="empty error">${error}</div>
+        </div>
+      `;
+    }
+
+    const groups = ADMISSION_GROUPS.map((g) => ({ ...g, rows: data[g.key] })).filter(
+      (g) => Array.isArray(g.rows) && g.rows.length
+    );
+
+    if (!groups.length) {
+      return `
+        <div class="entity-section is-flat">
+          <div class="section-head"><h2>${entity.name}</h2></div>
+          <div class="empty">No admission data for this session.</div>
+        </div>
+      `;
+    }
+
+    const tables = groups
+      .map((g) => `<div class="subhead">${g.title}</div>${renderGenericTable(g.rows)}`)
+      .join('');
+
+    return `
+      <div class="entity-section">
+        <div class="section-head"><h2>${entity.name}</h2></div>
+        ${tables}
+      </div>
+    `;
+  }
+
+  tabsEl.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('.tab');
+    if (!btn || btn.classList.contains('active')) return;
+    tabsEl.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+    btn.classList.add('active');
+    activeTab = btn.dataset.tab;
+    loadData();
+  });
+
+  entitySelect.addEventListener('change', loadData);
+  sessionInput.addEventListener('change', loadData);
+
+  const tooltipEl = document.getElementById('chartTooltip');
+
+  function showTooltip(group, clientX, clientY) {
+    const name = group.dataset.name;
+    const received = Number(group.dataset.received);
+    const due = Number(group.dataset.due);
+    const estimated = Number(group.dataset.estimated);
+
+    tooltipEl.innerHTML = '';
+    const title = document.createElement('div');
+    title.className = 'tt-title';
+    title.textContent = name;
+    tooltipEl.appendChild(title);
+
+    [
+      ['Estimated', estimated, 'var(--muted)'],
+      ['Received', received, 'var(--received)'],
+      ['Due', due, 'var(--due)'],
+    ].forEach(([label, value, color]) => {
+      const row = document.createElement('div');
+      row.className = 'tt-row';
+      const key = document.createElement('span');
+      key.className = 'tt-key';
+      const stroke = document.createElement('span');
+      stroke.className = 'tt-stroke';
+      stroke.style.background = color;
+      key.appendChild(stroke);
+      key.appendChild(document.createTextNode(label));
+      const val = document.createElement('span');
+      val.className = 'tt-val';
+      val.textContent = formatCurrency(value);
+      row.appendChild(key);
+      row.appendChild(val);
+      tooltipEl.appendChild(row);
+    });
+
+    tooltipEl.style.left = clientX + 'px';
+    tooltipEl.style.top = clientY + 'px';
+    tooltipEl.classList.add('visible');
+  }
+
+  function hideTooltip() {
+    tooltipEl.classList.remove('visible');
+  }
+
+  sectionsEl.addEventListener('pointermove', (ev) => {
+    const group = ev.target.closest('.bar-group');
+    if (!group) { hideTooltip(); return; }
+    showTooltip(group, ev.clientX, ev.clientY);
+  });
+  sectionsEl.addEventListener('pointerleave', hideTooltip, true);
+
+  loadEntities();
+</script>
+</body>
+</html>
